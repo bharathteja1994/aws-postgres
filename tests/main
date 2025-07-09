@@ -1,0 +1,101 @@
+
+
+#####################################################################################################################################
+##			                                          PGSQL Database Provisioner                                                         
+#####################################################################################################################################
+module "pgsql" {
+  source  = "../."
+
+  allocated_storage                = "<0.5 * X-GBytes>"
+  apply_immediately                = false
+  availability_zone                = null
+  aws_db_instance_role_association = true
+  backup_window                    = "21:00-00:00"
+  ca_cert_identifier               = "rds-ca-rsa2048-g1"
+  dedicated_log_volume             = false
+  enabled_cloudwatch_logs_exports  = ["postgresql", "upgrade"]
+  engine_version                   = "16.3"
+  engine                           = "postgres"
+  family                           = "postgres16"
+  feature_name                     = "s3Import"
+  final_snapshot_identifier        = null
+  identifier                       = "00"
+  ingress_rules = [
+    {
+      from_port   = ""
+      to_port     = ""
+      protocol    = "tcp"
+      cidr_blocks = ["<IP ADDRESS>"]
+      description = "Application Tier Cidr Block"
+    }
+  ]
+  instance_class = "db.m6gd.large"
+  #  iops                                  = ""
+  iam_database_authentication_enabled   = false
+  kms_key_id                            = 
+  kms_key_id_log_group                  = 
+  maintenance_window                    = "Sat:10:00-Sat:13:00"
+  max_allocated_storage                 = "<X-GBytes + (0.5 * X-GBytes)>"
+  monitoring_interval                   = "5"
+  monitoring_role_arn                   = ""
+  multi_az                              = true
+  performance_insights_enabled          = true
+  performance_insights_retention_period = "7"
+  performance_insights_kms_key_id       = ""
+  port                                  = "5432"
+  postgresql_parameter_option_group     = "./Postgresql_Parameter_Option_Group.json"
+  retention_in_days_rds_postgresql      = 7
+  retention_in_days_rds_upgrade         = 7
+  role_arn                              = ""
+  serial_number                         = "01"
+  snapshot_identifier                   = ""
+  storage_type                          = "gp2"
+  tags                                  = var.tags
+  vpc_id                                = data.aws_vpc.vpc.id
+  vpc_security_group_ids                = ""
+}
+
+module "pgsql-crrr" {
+  source  = "../."
+  providers = {
+    aws = aws.secondary
+  }
+
+  apply_immediately                     = false
+  availability_zone                     = null
+  backup_window                         = "21:00-00:00"
+  cross_region                          = true
+  ca_cert_identifier                    = "rds-ca-rsa2048-g1"
+  dedicated_log_volume                  = false
+  enabled_cloudwatch_logs_exports       = ["postgresql", "upgrade"]
+  engine_version                        = "16.3"
+  engine                                = "postgres"
+  family                                = "postgres16"
+  final_snapshot_identifier             = null
+  identifier                            = "90"
+  ingress_rules                         = []
+  instance_class                        = "db.m6gd.large"
+  instance_count                        = 1
+  iam_database_authentication_enabled   = false
+  kms_key_id                            = ""
+  kms_key_id_log_group                  = ""
+  maintenance_window                    = "Sat:10:00-Sat:13:00"
+  monitoring_interval                   = "5"
+  monitoring_role_arn                   = ""
+  multi_az                              = true
+  performance_insights_enabled          = true
+  performance_insights_retention_period = "7"
+  performance_insights_kms_key_id       = ""
+  port                                  = "5432"
+  postgresql_parameter_option_group     = "./Postgresql_Parameter_Option_Group_CRRR.json"
+  replicate_source_db                   = module.pgsql.instance_arn[0]
+  retention_in_days_rds_postgresql      = 7
+  retention_in_days_rds_upgrade         = 7
+  serial_number                         = "01"
+  skip_final_snapshot                   = true
+  snapshot_identifier                   = ""
+  storage_type                          = "gp2"
+  tags                                  = var.tags
+  vpc_id                                = data.aws_vpc.secondary.id
+  vpc_security_group_ids                = []
+}
